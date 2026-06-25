@@ -1,0 +1,38 @@
+# ============================================================================
+#  .gitignore  --  keep build output and editor cruft out of version control
+# ============================================================================
+#  We commit SOURCE (the .cu/.cpp/.h/.cuh, the build scripts, the project files,
+#  the docs) but never build PRODUCTS. Anyone can regenerate those by building;
+#  committing them just creates noise and merge conflicts.
+
+# --- nvcc / script build output ---
+build_nvcc/
+*.exe
+*.exp
+*.lib
+*.pdb
+*.obj
+*.o
+
+# --- CMake build trees ---
+build_cmake/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# --- Visual Studio / MSBuild output ---
+build_vs/
+.vs/
+# CUDA's MSBuild customization drops nvcc "--keep" intermediates next to the
+# project files; keep those out of the repo:
+msvc/SHA_Demo/
+msvc/SHA_Tests/
+msvc/x64/
+*.user
+
+# --- editor / OS noise ---
+.vscode/
+*.swp
+*~
+Thumbs.db
+.DS_Store

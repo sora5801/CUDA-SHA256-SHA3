@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ============================================================================
+       SHA_Tests.vcxproj : builds the known-answer correctness suite
+     ============================================================================
+     Identical toolchain wiring to SHA_Demo.vcxproj, but the executable is the
+     test harness in tests/test_vectors.cpp. Run it (or set it as the startup
+     project and press Ctrl+F5) to confirm the GPU output matches the official
+     FIPS 180-4 / FIPS 202 vectors and the CPU reference. It returns a non-zero
+     exit code on any failure, so it doubles as a CI gate.
+     ========================================================================= -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7C3B8A20-2222-4D3B-AF20-BBBBBBBB0002}</ProjectGuid>
+    <RootNamespace>SHA_Tests</RootNamespace>
+    <ProjectName>SHA_Tests</ProjectName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 13.3.props" />
+  </ImportGroup>
+
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)..\build_vs\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\build_vs\obj\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <CudaCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CodeGeneration>compute_75,sm_75</CodeGeneration>
+      <HostAdditionalCompilerOptions>/std:c++17</HostAdditionalCompilerOptions>
+    </CudaCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <CudaCompile Include="..\src\sha256_gpu.cu" />
+    <CudaCompile Include="..\src\sha3_gpu.cu" />
+    <ClCompile Include="..\src\sha_cpu_reference.cpp" />
+    <ClCompile Include="..\tests\test_vectors.cpp" />
+    <ClInclude Include="..\include\sha256.h" />
+    <ClInclude Include="..\include\sha3.h" />
+    <ClInclude Include="..\include\sha_common.h" />
+    <ClInclude Include="..\include\sha_cpu_reference.h" />
+    <ClInclude Include="..\include\sha_cuda.cuh" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 13.3.targets" />
+  </ImportGroup>
+</Project>

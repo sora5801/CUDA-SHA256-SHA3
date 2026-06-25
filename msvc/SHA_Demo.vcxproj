@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ============================================================================
+       SHA_Demo.vcxproj : Visual Studio / MSBuild project for the demo app
+     ============================================================================
+     Builds sha_demo.exe: the guided tour in demo/demo.cpp linked against the
+     shared SHA sources (the two CUDA kernels + the CPU reference). It is wired
+     for the toolchain this project was verified on (Visual Studio 18, toolset
+     v145, CUDA 13.3, GPU arch sm_75 for an RTX 2080 SUPER). On different
+     hardware, change two things:
+       * CodeGeneration below : your GPU's compute capability (e.g. sm_86).
+       * the CUDA props/targets version : your installed CUDA Toolkit version.
+     See docs/05_build_and_run.md for the full explanation.
+     ========================================================================= -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7C3B8A20-1111-4D3B-AF20-BBBBBBBB0001}</ProjectGuid>
+    <RootNamespace>SHA_Demo</RootNamespace>
+    <ProjectName>SHA_Demo</ProjectName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <!-- Application = produces an .exe.  v145 is the MSVC 14.5x toolset that
+         ships with Visual Studio 18. On VS 2022 use v143; on VS 2019 use v142. -->
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <!-- Bring in the CUDA build rules so .cu files compile with nvcc and the CUDA
+       runtime is linked automatically. These files were installed with the CUDA
+       Toolkit into Visual Studio's BuildCustomizations folder. -->
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 13.3.props" />
+  </ImportGroup>
+
+  <!-- Keep build artifacts out of the source tree, under SHA_256\build_vs\. -->
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)..\build_vs\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\build_vs\obj\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <!-- Let the .cpp/.cu code #include the public headers from include\. -->
+      <AdditionalIncludeDirectories>$(SolutionDir)..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <CudaCompile>
+      <!-- include\ is also needed by nvcc when it compiles the .cu kernels. -->
+      <AdditionalIncludeDirectories>$(SolutionDir)..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- Generate code for the local GPU (sm_75 = Turing / RTX 2080 SUPER).
+           Change this to match your card; e.g. compute_86,sm_86 for Ampere. -->
+      <CodeGeneration>compute_75,sm_75</CodeGeneration>
+      <HostAdditionalCompilerOptions>/std:c++17</HostAdditionalCompilerOptions>
+    </CudaCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- Source files. .cu compiles with nvcc (CudaCompile); .cpp with cl
+       (ClCompile). Headers are listed as ClInclude for IDE navigation only. -->
+  <ItemGroup>
+    <CudaCompile Include="..\src\sha256_gpu.cu" />
+    <CudaCompile Include="..\src\sha3_gpu.cu" />
+    <ClCompile Include="..\src\sha_cpu_reference.cpp" />
+    <ClCompile Include="..\demo\demo.cpp" />
+    <ClInclude Include="..\include\sha256.h" />
+    <ClInclude Include="..\include\sha3.h" />
+    <ClInclude Include="..\include\sha_common.h" />
+    <ClInclude Include="..\include\sha_cpu_reference.h" />
+    <ClInclude Include="..\include\sha_cuda.cuh" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 13.3.targets" />
+  </ImportGroup>
+</Project>
