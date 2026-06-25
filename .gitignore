@@ -30,7 +30,8 @@ msvc/SHA_Tests/
 msvc/x64/
 *.user
 
-# --- editor / OS noise ---
+# --- editor / OS / tooling noise ---
+.claude/
 .vscode/
 *.swp
 *~
